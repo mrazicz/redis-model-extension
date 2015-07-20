@@ -66,12 +66,12 @@ module RedisModelExtension
 
     # Check if key by arguments exists in db
     def exists? args = {}
-      RedisModelExtension::Database.redis.exists(self.name.constantize.generate_key(args))
+      RedisModelExtension::Database.redis {|r| r.exists(self.name.constantize.generate_key(args)) }
     end
 
     #Check if key by alias name and arguments exists in db
     def alias_exists? alias_name, args = {}
-      RedisModelExtension::Database.redis.exists(self.name.constantize.generate_alias_key(alias_name, args))
+      RedisModelExtension::Database.redis {|r| r.exists(self.name.constantize.generate_alias_key(alias_name, args)) }
     end
 
     private

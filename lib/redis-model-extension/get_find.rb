@@ -29,7 +29,7 @@ module RedisModelExtension
       unless search_key =~ /\*/
         out << klass.new_by_key(search_key) if klass.exists?(args)
       else
-        RedisModelExtension::Database.redis.keys(search_key).each do |key|
+        RedisModelExtension::Database.redis {|r| r.keys(search_key) }.each do |key|
           out << klass.new_by_key(key)
         end
       end
@@ -52,7 +52,7 @@ module RedisModelExtension
       unless search_key =~ /\*/
         out = klass.get_by_alias(alias_name, args) if klass.alias_exists?(alias_name, args)
       else
-        RedisModelExtension::Database.redis.keys(search_key).each do |key|
+        RedisModelExtension::Database.redis {|r| r.keys(search_key) }.each do |key|
           out << klass.get_by_alias_key(key)
         end
       end
@@ -96,7 +96,7 @@ module RedisModelExtension
       klass = self.name.constantize
       if klass.valid_alias_key?(alias_name, args) && klass.alias_exists?(alias_name, args)
         out = []
-        RedisModelExtension::Database.redis.smembers(klass.generate_alias_key(alias_name, args)).each do |key|
+        RedisModelExtension::Database.redis {|r| r.smembers(klass.generate_alias_key(alias_name, args)) }.each do |key|
           item = klass.new_by_key(key)
           out << item if item
         end
@@ -123,9 +123,9 @@ module RedisModelExtension
     #fastest method to get object from redis by getting it by alias and arguments
     def get_by_alias_key(alias_key)
       klass = self.name.constantize
-      if RedisModelExtension::Database.redis.exists(alias_key)
+      if RedisModelExtension::Database.redis {|r| r.exists(alias_key) }
         out = []
-        RedisModelExtension::Database.redis.smembers(alias_key).each do |key|
+        RedisModelExtension::Database.redis {|r| r.smembers(alias_key) }.each do |key|
           item = klass.new_by_key(key)
           out << item if item
         end
@@ -140,7 +140,7 @@ module RedisModelExtension
 
     # read all data from redis and create new instance (used for Find & Get method)
     def new_by_key(key)
-      args = RedisModelExtension::Database.redis.hgetall(key)
+      args = RedisModelExtension::Database.redis {|r| r.hgetall(key) }
       return nil unless args && args.any?
       args.symbolize_keys!
 

@@ -8,7 +8,7 @@ module RedisModelExtension
 
     # get last id from redis
     def get_last_id
-      Database.redis.get generate_autoincrement_key
+      Database.redis {|r| r.get generate_autoincrement_key }
     end
 
     #generate autoincrement key
@@ -26,7 +26,7 @@ module RedisModelExtension
 
     # get auto incremented id from redis
     def increment_id
-      Database.redis.incr self.class.generate_autoincrement_key
+      Database.redis {|r| r.incr self.class.generate_autoincrement_key }
     end
 
     # get last id from redis

@@ -6,6 +6,7 @@ gem "activesupport"
 gem "activemodel"
 gem "hashr"
 gem "yajl-ruby"
+gem "connection_pool", "~> 2.0"
 
 group :development do
   gem "shoulda", ">= 0"
@@ -20,6 +21,6 @@ group :development do
   gem "turn"
   gem "json"
   gem "minitest", "<= 4"
-  gem "ansi" 
+  gem "ansi"
 end
 

@@ -27,15 +27,15 @@ module RedisModelExtension
           generated_key = redis_key        
 
           #take care about renaming saved hash in redis (if key changed)
-          if redis_old_keys[:key] && redis_old_keys[:key] !=  generated_key && RedisModelExtension::Database.redis.exists(redis_old_keys[:key])
-            RedisModelExtension::Database.redis.rename(redis_old_keys[:key], generated_key)
+          if redis_old_keys[:key] && redis_old_keys[:key] !=  generated_key && RedisModelExtension::Database.redis {|r| r.exists(redis_old_keys[:key]) }
+            RedisModelExtension::Database.redis {|r| r.rename(redis_old_keys[:key], generated_key) }
           end
 
           #ignore nil values for save 
           args = self.class.redis_save_fields_with_nil_conf ? to_arg : to_arg.reject{|k,v| v.nil?}
 
           #perform save to redis hash
-          RedisModelExtension::Database.redis.hmset(generated_key, *args.inject([]){ |arr,kv| arr + [kv[0], value_to_redis(kv[0], kv[1])]})
+          RedisModelExtension::Database.redis {|r| r.hmset(generated_key, *args.inject([]){ |arr,kv| arr + [kv[0], value_to_redis(kv[0], kv[1])]}) }
           
           # destroy aliases
           destroy_aliases!
@@ -66,7 +66,7 @@ module RedisModelExtension
     def create_aliases
       main_key = redis_key
       redis_alias_config.each do |alias_name, fields|
-        RedisModelExtension::Database.redis.sadd(redis_alias_key(alias_name), main_key) if valid_alias_key? alias_name
+        RedisModelExtension::Database.redis {|r| r.sadd(redis_alias_key(alias_name), main_key) } if valid_alias_key? alias_name
       end
     end
 
@@ -85,7 +85,7 @@ module RedisModelExtension
       if exists?
         run_callbacks :destroy do
           #destroy main object
-          RedisModelExtension::Database.redis.del(redis_key) 
+          RedisModelExtension::Database.redis {|r| r.del(redis_key) }
           destroy_aliases!
         end
       end
@@ -98,12 +98,14 @@ module RedisModelExtension
       #do it only if it is existing object!
       if redis_old_keys[:aliases].size > 0
         redis_old_keys[:aliases].each do |alias_key|
-          RedisModelExtension::Database.redis.srem alias_key, redis_old_keys[:key]
+          RedisModelExtension::Database.redis {|r| r.srem alias_key, redis_old_keys[:key] }
           #delete alias with 0 keys
-          RedisModelExtension::Database.redis.del(alias_key) if RedisModelExtension::Database.redis.scard(alias_key).to_i == 0
+          RedisModelExtension::Database.redis {|r| r.del(alias_key) } \
+            if RedisModelExtension::Database.redis {|r| r.scard(alias_key) }.to_i == 0
         end
       end
     end
     
   end
 end
+

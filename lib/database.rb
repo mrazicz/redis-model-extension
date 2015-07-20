@@ -5,11 +5,12 @@
 module RedisModelExtension
   module Database
     DEFAULT_POOL_SIZE = 25
+    DEFAULT_TIMEOUT = 5
 
     def self.config
       if File.exists?('config/redis_config.yml')
         cfg = YAML.load_file('config/redis_config.yml')[ENV['RACK_ENV'] || ENV['RAILS_ENV'] || 'development'].symbolize_keys
-        redis_config = cfg
+        self.redis_config = cfg
       else
         FileUtils.mkdir_p('config') unless File.exists?('config')
         FileUtils.cp(File.join(File.dirname(__FILE__),"../config/redis_config.yml.example"), 'config/redis_config.yml.example')
@@ -19,26 +20,31 @@ module RedisModelExtension
     
     def self.redis_config= conf
       raise ArgumentError, "Argument must be hash {:host => '..', :port => 6379, :db => 0 }" unless conf.has_key?(:host) && conf.has_key?(:port) && conf.has_key?(:db)
+      warn "Redis configuration doesn't include size and will be set to #{DEFAULT_POOL_SIZE}" unless conf.has_key?(:size)
+      warn "Redis configuration doesn't include timeout and will be set to #{DEFAULT_TIMEOUT}" unless conf.has_key?(:timeout)
       @redis_config = conf
     end
 
     def self.redis= redis
-      if redis.is_a?(Redis) #valid redis instance
-        Thread.current[:redis_model_extension] = redis  
-      elsif redis.nil? #remove redis instance for changing connection or using in next call configs
-        Thread.current[:redis_model_extension] = nil
+      if redis.is_a?(Redis) #valid redis instance, create new pool
+        @connection_pool = ConnectionPool::Wrapper.new { redis }
+      elsif redis.nil? #remove connection_pool for changing connection or using in next call configs
+        @connection_pool = nil
       else #else you assigned something wrong
         raise ArgumentError, "You have to assign Redis instance!"
       end
     end
 
-    def self.redis
-      #if redis is already defined
-      return Thread.current[:redis_model_extension] if Thread.current[:redis_model_extension]
-      #if you provided redis config
-      return Thread.current[:redis_model_extension] = Redis.new(@redis_config) if @redis_config
-      #if you provided yml config
-      return Thread.current[:redis_model_extension] = Redis.new(Database.config)
+    def self.redis &block
+      unless @connection_pool
+        cfg = @redis_config || self.config # fetch config or raises ArgumentError
+        @connection_pool = ConnectionPool::Wrapper.new(
+          size: cfg[:size] || DEFAULT_POOL_SIZE,
+          timeout: cfg[:timeout] || DEFAULT_TIMEOUT
+        ) { Redis.new(cfg.except(:size, :timeout)) }
+      end
+
+      block_given? ? @connection_pool.with(&block) : @connection_pool
     end
 
   end
