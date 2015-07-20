@@ -19,7 +19,7 @@ group :development do
   gem "jeweler"
   gem "turn"
   gem "json"
-  gem "minitest"
+  gem "minitest", "<= 4"
   gem "ansi" 
 end
 

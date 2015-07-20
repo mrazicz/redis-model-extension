@@ -89,7 +89,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<turn>, [">= 0"])
       s.add_development_dependency(%q<json>, [">= 0"])
-      s.add_development_dependency(%q<minitest>, [">= 0"])
+      s.add_development_dependency(%q<minitest>, ["<= 4"])
       s.add_development_dependency(%q<ansi>, [">= 0"])
     else
       s.add_dependency(%q<redis>, [">= 0"])
@@ -109,7 +109,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<turn>, [">= 0"])
       s.add_dependency(%q<json>, [">= 0"])
-      s.add_dependency(%q<minitest>, [">= 0"])
+      s.add_dependency(%q<minitest>, ["<= 4"])
       s.add_dependency(%q<ansi>, [">= 0"])
     end
   else
@@ -130,7 +130,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<turn>, [">= 0"])
     s.add_dependency(%q<json>, [">= 0"])
-    s.add_dependency(%q<minitest>, [">= 0"])
+    s.add_dependency(%q<minitest>, ["<= 4"])
     s.add_dependency(%q<ansi>, [">= 0"])
   end
 end

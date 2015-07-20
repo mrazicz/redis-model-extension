@@ -21,6 +21,7 @@ end
 
 require 'test/unit'
 require 'mocha'
+require 'mocha/setup'
 require 'turn'
 require 'shoulda-context'
 require 'json'
