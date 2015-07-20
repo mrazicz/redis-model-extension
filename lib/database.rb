@@ -4,10 +4,12 @@
 #Creates only one connection to redis per application in first time it needs to work with redis
 module RedisModelExtension
   module Database
+    DEFAULT_POOL_SIZE = 25
 
     def self.config
       if File.exists?('config/redis_config.yml')
-        YAML.load_file('config/redis_config.yml')[ENV['RACK_ENV'] || ENV['RAILS_ENV'] || 'development'].symbolize_keys
+        cfg = YAML.load_file('config/redis_config.yml')[ENV['RACK_ENV'] || ENV['RAILS_ENV'] || 'development'].symbolize_keys
+        redis_config = cfg
       else
         FileUtils.mkdir_p('config') unless File.exists?('config')
         FileUtils.cp(File.join(File.dirname(__FILE__),"../config/redis_config.yml.example"), 'config/redis_config.yml.example')
